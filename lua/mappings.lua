@@ -17,3 +17,4 @@ vim.keymap.set("n", "<leader>p", ":r !pbpaste<CR>", { desc = "Paste from clipboa
 -- Paste from macOS clipboard in insert mode
 vim.keymap.set("i", "<C-p>", "<C-r>=system('pbpaste')<CR>", { desc = "Paste from clipboard" })
 
+vim.keymap.set("n", "<leader>gb", ":Gitsigns toggle_current_line_blame<CR>", {desc = "Gitblame current line"})
