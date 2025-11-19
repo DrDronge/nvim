@@ -26,14 +26,50 @@ return {
   { "neovim/nvim-lspconfig" },
 
   -- Autocompletion
-  { "hrsh7th/nvim-cmp" },
-  { "hrsh7th/cmp-nvim-lsp" },
-  { "L3MON4D3/LuaSnip" },
+  { "saghen/Blink.cmp",
+    dependencies = { "rafamadriz/friendly-snippets" },
+    
+    --- @module "blink.cmp"
+    --- @type blink.cmp.Config
+    opts = {
+	keymap = { preset = "default" },
+	
+	appearance = { nerd_font_variant = "mono" },
+
+	completion = { documentation = { auto_show = false } },
+
+	sources = { default = { "lsp", "path", "snippets", "buffer" } },
+
+	fuzzy = { implementation = "prefer_rust_with_warning" }
+    },
+    opts_extend = { "sources.default" }
+    },
 
   -- Git integration
   { "lewis6991/gitsigns.nvim" },
 
   -- Status line
   { "nvim-lualine/lualine.nvim" },
+
+  -- Indentation
+  { "saghen/blink.indent" },
+
+  -- Diagnostic
+  { "rachartier/tiny-inline-diagnostic.nvim" },
+  
+  -- Mappings helper
+  { "folke/which-key.nvim" },
+
+  -- Todo
+  { "folke/todo-comments.nvim" },
+
+  -- Git conflicts
+  { "akinsho/git-conflict.nvim" },
+
+  -- Line number change mode
+  { "sethen/line-number-change-mode.nvim" },
+
+  -- File explorer
+  { "nvim-tree/nvim-tree.lua" }
 },
 }
