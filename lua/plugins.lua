@@ -70,6 +70,20 @@ return {
   { "sethen/line-number-change-mode.nvim" },
 
   -- File explorer
-  { "nvim-tree/nvim-tree.lua" }
+  { "nvim-tree/nvim-tree.lua",
+	sort = {
+		sorter = "case_sensitive",
+	},
+	view = {
+		width = 30,
+	},
+	renderer = {
+		group_empty = true,
+	},
+	filters = {
+		dotfiles = true,
+	},
+  },
+  { "nvim-tree/nvim-web-devicons"}
 },
 }
