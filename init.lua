@@ -14,6 +14,7 @@ vim.opt.termguicolors = true
 -- Plugin setup
 require("lazy").setup("plugins")
 require("nvim-tree").setup()
+require("blink.cmp").setup()
 -- require("settings")
 require("mappings")
 -- require("plugins")
