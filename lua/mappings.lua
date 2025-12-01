@@ -18,3 +18,7 @@ vim.keymap.set("n", "<leader>p", ":r !pbpaste<CR>", { desc = "Paste from clipboa
 vim.keymap.set("i", "<C-p>", "<C-r>=system('pbpaste')<CR>", { desc = "Paste from clipboard" })
 
 vim.keymap.set("n", "<leader>gb", ":Gitsigns toggle_current_line_blame<CR>", {desc = "Gitblame current line"})
+
+-- NvimTree
+vim.keymap.set("n", "<leader>nt", ":NvimTreeToggle<CR>", { desc = "NvimTreeToggle to open and close NvimTree"})
+vim.keymap.set("n", "<leader>nf", ":NvimTreeFocus<CR>", { desc = "NvimTree focus"})
