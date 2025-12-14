@@ -6,7 +6,6 @@ return {
     opts = {
       defaults = {
         prompt_prefix = "> ",
-        selection_caret = "> ",
         sorting_strategy = "ascending",
         layout_strategy = "horizontal",
         layout_config = { prompt_position = "top" },
@@ -84,6 +83,14 @@ return {
 		dotfiles = true,
 	},
   },
-  { "nvim-tree/nvim-web-devicons"}
-},
+  { "nvim-tree/nvim-web-devicons"},
+  { "seblyng/roslyn.nvim",
+    ---@module 'roslyn.config'
+    ---@type RoslynNvimConfig
+    opts = {
+        -- your configuration comes here; leave empty for default settings
+    },
+  },
+  { "williamboman/mason.nvim" },
+}
 }
