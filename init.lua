@@ -12,6 +12,11 @@ vim.g.loaded_netrwPlugin = 1
 
 vim.opt.termguicolors = true
 
+-- Line numbers
+vim.opt.number = true         -- Show absolute line numbers
+vim.opt.relativenumber = false -- Show relative line numbers (useful for motions)
+vim.opt.numberwidth = 4       -- Width of the number column
+
 -- Enable filetype detection and syntax
 vim.cmd([[
   filetype plugin indent on
@@ -22,20 +27,9 @@ require("lazy").setup("plugins")
 require("nvim-tree").setup()
 -- require("settings")
 require("mappings")
-require("catppuccin").setup({
-	auto_integrations = true,
-	integrations = {
-		treesitter = true,
-	},
-})
-vim.cmd.colorscheme("catppuccin")
--- require("plugins")
-require("mason").setup({
-    registries = {
-        "github:mason-org/mason-registry",
-        "github:Crashdummyy/mason-registry",
-    },
-})
+
+vim.cmd.colorscheme("onedark")
+
 require("nvim-treesitter.configs").setup({
   highlight = {
     enable = true,
