@@ -11,12 +11,24 @@ vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
 vim.opt.termguicolors = true
+
+-- Enable filetype detection and syntax
+vim.cmd([[
+  filetype plugin indent on
+  syntax enable
+]])
 -- Plugin setup
 require("lazy").setup("plugins")
 require("nvim-tree").setup()
-require("blink.cmp").setup()
 -- require("settings")
 require("mappings")
+require("catppuccin").setup({
+	auto_integrations = true,
+	integrations = {
+		treesitter = true,
+	},
+})
+vim.cmd.colorscheme("catppuccin")
 -- require("plugins")
 -- require("lsp")
 
