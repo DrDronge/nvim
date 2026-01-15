@@ -30,5 +30,17 @@ require("catppuccin").setup({
 })
 vim.cmd.colorscheme("catppuccin")
 -- require("plugins")
--- require("lsp")
+require("mason").setup({
+    registries = {
+        "github:mason-org/mason-registry",
+        "github:Crashdummyy/mason-registry",
+    },
+})
+require("nvim-treesitter.configs").setup({
+  highlight = {
+    enable = true,
+    additional_vim_regex_highlighting = false,
+  },
+  indent = { enable = true },
+})
 
