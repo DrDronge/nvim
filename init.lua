@@ -28,7 +28,7 @@ require("nvim-tree").setup()
 -- require("settings")
 require("mappings")
 
-vim.cmd.colorscheme("onedark")
+vim.cmd.colorscheme("vaporwave")
 
 require("nvim-treesitter.configs").setup({
   highlight = {
