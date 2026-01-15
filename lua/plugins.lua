@@ -1,136 +1,126 @@
 return {
-  -- Fuzzy finder
   {
     "nvim-telescope/telescope.nvim",
+    cmd = "Telescope",
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       defaults = {
-        prompt_prefix = "> ",
-        sorting_strategy = "ascending",
-        layout_strategy = "horizontal",
-        layout_config = { prompt_position = "top" },
+        file_ignore_patterns = { 
+          "node_modules",
+          "%.git/",
+          "bin/",
+          "obj/",
+          "%.dll$",
+          "%.pdb$",
+          "%.cache$",
+        },
+        vimgrep_arguments = {
+          "rg",
+          "--color=never",
+          "--no-heading",
+          "--with-filename",
+          "--line-number",
+          "--column",
+          "--smart-case",
+          "--hidden",
+        },
       },
     },
-    config = function(_, opts)
-      require("telescope").setup(opts)
-    end,
   },
-
-  -- File browser (Oil)
-  { "stevearc/oil.nvim", opts = {} },
-
-  -- Syntax highlighting & parsing
+  
+  { "stevearc/oil.nvim", cmd = "Oil", opts = {} },
+  
   {
     "nvim-treesitter/nvim-treesitter",
+    event = { "BufReadPost", "BufNewFile" },
     build = ":TSUpdate",
     config = function()
-      -- Platform-specific configuration for treesitter
       if vim.fn.has("win32") == 1 then
-        -- Windows: Use Zig to avoid MSVC requirement
         require("nvim-treesitter.install").compilers = { "zig" }
-      else
-        -- Linux/Mac: Use system compilers (gcc, clang are usually available)
-        require("nvim-treesitter.install").compilers = { "gcc", "clang", "cc" }
       end
-      
+
       require("nvim-treesitter.configs").setup({
-        ensure_installed = {
-            "c_sharp",
-            "lua",
-            "vim"
-        },
-        sync_install = false,
-        auto_install = true,  -- Safe to enable on Linux/Mac with system compilers
+        ensure_installed = { "c_sharp", "lua", "vim" },
+        auto_install = true,
         highlight = {
           enable = true,
-          -- Disable vim's regex highlighting
           additional_vim_regex_highlighting = false,
         },
-        indent = {
-          enable = true,
-        },
+        indent = { enable = true },
       })
-      
-      -- Ensure C# files are recognized
-      vim.filetype.add({
-        extension = {
-          cs = "cs",
-        },
-      })
+
+      vim.filetype.add({ extension = { cs = "cs" } })
     end,
   },
 
-  -- LSP (Language Server Protocol)
   { "neovim/nvim-lspconfig" },
 
-  -- Autocompletion
-  { "saghen/blink.cmp",
+  {
+    "saghen/blink.cmp",
     dependencies = { "rafamadriz/friendly-snippets" },
     version = "*",
-    -- Platform-specific build command
     build = vim.fn.has("win32") == 1 and "pwsh -c .\\build.ps1" or "cargo build --release",
-    --- @module "blink.cmp"
-    --- @type blink.cmp.Config
     opts = {
       keymap = { preset = "default" },
-      
       appearance = {
         use_nvim_cmp_as_default = true,
-        nerd_font_variant = "mono"
+        nerd_font_variant = "mono",
       },
-
       completion = {
-        documentation = { auto_show = true, auto_show_delay_ms = 500 }
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 500,
+        },
       },
-
       sources = {
-        default = { "lsp", "path", "snippets", "buffer" }
+        default = { "lsp", "path", "snippets", "buffer" },
       },
-
-      signature = { enabled = true }
+      signature = { enabled = true },
     },
-    opts_extend = { "sources.default" }
+    opts_extend = { "sources.default" },
   },
-
-  -- Git integration
-  { "lewis6991/gitsigns.nvim" },
-
-  -- Status line
-  { "nvim-lualine/lualine.nvim" },
-
-  -- Indentation
-  { "saghen/blink.indent" },
-
-  -- Diagnostic
-  { "rachartier/tiny-inline-diagnostic.nvim" },
   
-  -- Mappings helper
-  { "folke/which-key.nvim" },
-
-  -- Todo
-  { "folke/todo-comments.nvim" },
-
-  -- Git conflicts
-  { "akinsho/git-conflict.nvim" },
-
-  -- Line number change mode
-  { "sethen/line-number-change-mode.nvim" },
-
-  -- File explorer
-  { "nvim-tree/nvim-tree.lua",
-	sort = {
-		sorter = "case_sensitive",
-	},
-	view = {
-		width = 30,
-	},
-	renderer = {
-		group_empty = true,
-	},
-	filters = {
-		dotfiles = true,
-	},
+  { 
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      signs = {
+        add = { text = "+" },
+        change = { text = "~" },
+        delete = { text = "_" },
+      },
+    },
   },
-  { "nvim-tree/nvim-web-devicons"},
-  { "olimorris/onedarkpro.nvim", priority = 1000, },
+  
+  { "nvim-lualine/lualine.nvim", event = "VeryLazy", opts = {} },
+  { "saghen/blink.indent" },
+  { "rachartier/tiny-inline-diagnostic.nvim", event = "LspAttach", opts = {} },
+  { "folke/which-key.nvim", event = "VeryLazy", opts = {} },
+  { "folke/todo-comments.nvim", event = { "BufReadPost", "BufNewFile" }, opts = {} },
+  { "akinsho/git-conflict.nvim", event = "VeryLazy", opts = {} },
+  { "sethen/line-number-change-mode.nvim" },
+  
+  {
+    "nvim-tree/nvim-tree.lua",
+    cmd = { "NvimTreeToggle", "NvimTreeFocus" },
+  },
+  
+  { "nvim-tree/nvim-web-devicons", lazy = true },
+  { "olimorris/onedarkpro.nvim", priority = 1000 },
+  
+  {
+    "mfussenegger/nvim-dap",
+    cmd = { "DapToggleBreakpoint", "DapContinue" },
+    dependencies = { "rcarriga/nvim-dap-ui", "nvim-neotest/nvim-nio" },
+  },
+
+  { "Decodetalkers/csharpls-extended-lsp.nvim", ft = "cs" },
+  { "nvimtools/none-ls.nvim", event = "LspAttach", dependencies = { "nvim-lua/plenary.nvim" } },
+  { "windwp/nvim-autopairs", event = "InsertEnter", opts = {} },
+  { "numToStr/Comment.nvim", keys = { "gc", "gb" }, opts = {} },
+  { "kylechui/nvim-surround", event = "VeryLazy", opts = {} },
+  { "nvim-pack/nvim-spectre", cmd = "Spectre" },
+  { "windwp/nvim-ts-autotag", ft = { "html", "xml" } },
+  { "williamboman/mason.nvim", cmd = "Mason", opts = {} },
+  { "williamboman/mason-lspconfig.nvim", lazy = true, opts = {} },
 }

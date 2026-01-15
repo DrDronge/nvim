@@ -13,19 +13,79 @@ vim.g.loaded_netrwPlugin = 1
 vim.opt.termguicolors = true
 
 -- Line numbers
-vim.opt.number = true         -- Show absolute line numbers
-vim.opt.relativenumber = false -- Show relative line numbers (useful for motions)
-vim.opt.numberwidth = 4       -- Width of the number column
+vim.opt.number = true
+vim.opt.relativenumber = false
+vim.opt.numberwidth = 4
+
+-- Performance improvements
+vim.opt.updatetime = 250
+vim.opt.timeoutlen = 300
+vim.opt.swapfile = false
+vim.opt.backup = false
+vim.opt.writebackup = false
 
 -- Enable filetype detection and syntax
 vim.cmd([[
   filetype plugin indent on
   syntax enable
 ]])
--- Plugin setup
-require("lazy").setup("plugins")
-require("nvim-tree").setup()
--- require("settings")
+
+-- Plugin setup with performance optimization
+require("lazy").setup("plugins", {
+  performance = {
+    cache = {
+      enabled = true,
+    },
+    rtp = {
+      disabled_plugins = {
+        "gzip",
+        "tarPlugin",
+        "tohtml",
+        "tutor",
+        "zipPlugin",
+      },
+    },
+  },
+})
+
+require("nvim-tree").setup({
+  sync_root_with_cwd = false,
+  respect_buf_cwd = false,
+  update_focused_file = {
+    enable = true,
+    update_root = false,  -- Don't change root when opening file
+  },
+  filesystem_watchers = {
+    enable = true,
+    debounce_delay = 50,  -- Add delay to reduce I/O
+    ignore_dirs = {
+      "node_modules",
+      ".git",
+      "bin",
+      "obj",
+      ".vs",
+      ".vscode",
+      ".idea"
+    },
+  },
+  git = {
+    enable = true,
+    ignore = false,
+    timeout = 400,  -- Reduce git timeout
+  },
+  view = {
+    width = 30,
+  },
+  renderer = {
+    group_empty = true,
+  },
+  filters = {
+    dotfiles = false,
+    custom = { "^.git$", "^node_modules$", "^bin$", "^obj$" },  -- Hide these folders
+  },
+})
+
+require("lsp")
 require("mappings")
 
 vim.cmd.colorscheme("vaporwave")
@@ -37,4 +97,3 @@ require("nvim-treesitter.configs").setup({
   },
   indent = { enable = true },
 })
-
