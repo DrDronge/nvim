@@ -5,10 +5,14 @@ map("n", "<C-n>", ":NvimTreeToggle<CR>", { desc = "Toggle file tree" })
 map("n", "<leader>e", ":NvimTreeFocus<CR>", { desc = "Focus file tree" })
 
 -- Telescope
-map("n", "<leader>ff", ":Telescope find_files<CR>", { desc = "Find files" })
+map("n", "<leader>ff", ":Telescope find_files<CR>", { desc = "Find files (current dir)" })
+map("n", "<leader>fa", function()
+  require("telescope.builtin").find_files({ cwd = vim.fn.stdpath("config") })
+end, { desc = "Find files (nvim config)" })
 map("n", "<leader>fg", ":Telescope live_grep<CR>", { desc = "Live grep" })
 map("n", "<leader>fb", ":Telescope buffers<CR>", { desc = "Find buffers" })
 map("n", "<leader>fh", ":Telescope help_tags<CR>", { desc = "Help tags" })
+map("n", "<leader>fr", ":Telescope oldfiles<CR>", { desc = "Recent files" })
 
 -- Oil (file browser)
 map("n", "-", ":Oil<CR>", { desc = "Open parent directory" })
@@ -86,3 +90,96 @@ map("v", "<leader>/", "<ESC><cmd>lua require('Comment.api').toggle.linewise(vim.
 map("n", "<leader>gp", ":Gitsigns preview_hunk<CR>", { desc = "Preview git hunk" })
 map("n", "<leader>gr", ":Gitsigns reset_hunk<CR>", { desc = "Reset git hunk" })
 map("n", "<leader>gb", ":Gitsigns blame_line<CR>", { desc = "Git blame line" })
+
+-- ========================================
+-- BUILD & RUN (C# / .NET)
+-- ========================================
+
+-- Build current project
+map("n", "<F5>", function()
+  vim.cmd("w") -- Save first
+  vim.cmd("!dotnet build")
+end, { desc = "Build .NET project" })
+
+-- Run current project
+map("n", "<F6>", function()
+  vim.cmd("w") -- Save first
+  vim.cmd("!dotnet run")
+end, { desc = "Run .NET project" })
+
+-- Build and run
+map("n", "<leader>br", function()
+  vim.cmd("w")
+  vim.cmd("!dotnet build && dotnet run")
+end, { desc = "Build and run" })
+
+-- Run tests
+map("n", "<leader>bt", function()
+  vim.cmd("!dotnet test")
+end, { desc = "Run .NET tests" })
+
+-- Clean build
+map("n", "<leader>bc", function()
+  vim.cmd("!dotnet clean && dotnet build")
+end, { desc = "Clean and build" })
+
+-- ========================================
+-- DEBUGGING (using nvim-dap)
+-- ========================================
+
+-- Toggle breakpoint
+map("n", "<leader>db", function()
+  require("dap").toggle_breakpoint()
+end, { desc = "Toggle breakpoint" })
+
+-- Start/Continue debugging
+map("n", "<F9>", function()
+  require("dap").continue()
+end, { desc = "Start/Continue debugging" })
+
+-- Step over
+map("n", "<F10>", function()
+  require("dap").step_over()
+end, { desc = "Step over" })
+
+-- Step into
+map("n", "<F11>", function()
+  require("dap").step_into()
+end, { desc = "Step into" })
+
+-- Step out
+map("n", "<S-F11>", function()
+  require("dap").step_out()
+end, { desc = "Step out" })
+
+-- Stop debugging
+map("n", "<leader>ds", function()
+  require("dap").terminate()
+end, { desc = "Stop debugging" })
+
+-- Open debug UI
+map("n", "<leader>du", function()
+  require("dapui").toggle()
+end, { desc = "Toggle debug UI" })
+
+-- Evaluate expression under cursor
+map("n", "<leader>de", function()
+  require("dapui").eval()
+end, { desc = "Evaluate expression" })
+
+-- ========================================
+-- TERMINAL SHORTCUTS
+-- ========================================
+
+-- Open terminal in split
+map("n", "<leader>th", ":split | terminal<CR>", { desc = "Terminal horizontal split" })
+map("n", "<leader>tv", ":vsplit | terminal<CR>", { desc = "Terminal vertical split" })
+
+-- Exit terminal mode with Esc
+map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+-- Close current window/pane (works for terminal too!)
+map("n", "<leader>w", ":close<CR>", { desc = "Close current window" })
+
+-- Close terminal and window at once (from terminal mode)
+map("t", "<C-q>", "<C-\\><C-n>:close<CR>", { desc = "Close terminal" })

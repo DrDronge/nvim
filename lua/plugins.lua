@@ -5,24 +5,42 @@ return {
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       defaults = {
+        path_display = { "truncate" },
+        layout_strategy = "horizontal",
+        layout_config = {
+          horizontal = {
+            prompt_position = "top",
+            preview_width = 0.55,
+            results_width = 0.8,
+          },
+          width = 0.87,
+          height = 0.80,
+          preview_cutoff = 120,
+        },
+        sorting_strategy = "ascending",
         file_ignore_patterns = { 
-          "node_modules",
-          "%.git/",
+          "^%.git/",        -- .git at start
+          "/%.git/",        -- .git in path
+          "%.git$",         -- .git at end
+          "node_modules/",
           "bin/",
           "obj/",
           "%.dll$",
           "%.pdb$",
+          "%.exe$",
           "%.cache$",
+          "lazy%-lock%.json",
+          "/lazy/",
+          "/site/pack/",
+          "/plugged/",
+          "%.vs/",
+          "%.vscode/",
         },
-        vimgrep_arguments = {
-          "rg",
-          "--color=never",
-          "--no-heading",
-          "--with-filename",
-          "--line-number",
-          "--column",
-          "--smart-case",
-          "--hidden",
+      },
+      pickers = {
+        find_files = {
+          hidden = true,
+          follow = true,
         },
       },
     },
@@ -123,4 +141,16 @@ return {
   { "windwp/nvim-ts-autotag", ft = { "html", "xml" } },
   { "williamboman/mason.nvim", cmd = "Mason", opts = {} },
   { "williamboman/mason-lspconfig.nvim", lazy = true, opts = {} },
+  
+  {
+    "j-hui/fidget.nvim",
+    event = "LspAttach",
+    opts = {
+      notification = {
+        window = {
+          winblend = 0,
+        },
+      },
+    },
+  },
 }

@@ -24,6 +24,39 @@ vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.writebackup = false
 
+-- OS-specific shell configuration
+if vim.fn.has("win32") == 1 then
+  -- Windows: Use CMD for internal shell commands (faster than PowerShell)
+  vim.opt.shell = "cmd.exe"
+  vim.opt.shellcmdflag = "/c"
+  vim.opt.shellquote = ""
+  vim.opt.shellxquote = ""
+else
+  -- Mac/Linux: Use default shell (zsh/bash)
+  -- This is already the default, but explicitly setting for clarity
+  vim.opt.shell = vim.o.shell or "/bin/zsh"
+end
+
+-- Fix for Windows terminal focus issues
+if vim.fn.has("win32") == 1 then
+  vim.opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50"
+  vim.opt.ttimeoutlen = 10
+  vim.opt.redrawtime = 1500
+
+  -- Auto-redraw on focus gain (fixes tab-out freeze)
+  vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+    pattern = "*",
+    command = "checktime",
+  })
+
+  vim.api.nvim_create_autocmd("FocusGained", {
+    pattern = "*",
+    callback = function()
+      vim.cmd("redraw!")
+    end,
+  })
+end
+
 -- Enable filetype detection and syntax
 vim.cmd([[
   filetype plugin indent on
@@ -53,11 +86,11 @@ require("nvim-tree").setup({
   respect_buf_cwd = false,
   update_focused_file = {
     enable = true,
-    update_root = false,  -- Don't change root when opening file
+    update_root = false,
   },
   filesystem_watchers = {
     enable = true,
-    debounce_delay = 50,  -- Add delay to reduce I/O
+    debounce_delay = 50,
     ignore_dirs = {
       "node_modules",
       ".git",
@@ -65,13 +98,13 @@ require("nvim-tree").setup({
       "obj",
       ".vs",
       ".vscode",
-      ".idea"
+      ".idea",
     },
   },
   git = {
     enable = true,
     ignore = false,
-    timeout = 400,  -- Reduce git timeout
+    timeout = 400,
   },
   view = {
     width = 30,
@@ -81,7 +114,7 @@ require("nvim-tree").setup({
   },
   filters = {
     dotfiles = false,
-    custom = { "^.git$", "^node_modules$", "^bin$", "^obj$" },  -- Hide these folders
+    custom = { "^.git$", "^node_modules$", "^bin$", "^obj$" },
   },
 })
 
