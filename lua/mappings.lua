@@ -172,8 +172,8 @@ end, { desc = "Evaluate expression" })
 -- ========================================
 
 -- Create new console app
-map("n", "<leader>nc", function()
-  local name = vim.fn.input("Project name: ")
+map("n", "<leader>nco", function()
+  local name = vim.fn.input("Console project name: ")
   if name ~= "" then
     vim.cmd("!dotnet new console -n " .. name)
   end
@@ -194,6 +194,22 @@ map("n", "<leader>na", function()
     vim.cmd("!dotnet new webapi -n " .. name)
   end
 end, { desc = "New Web API project" })
+
+-- Create new C# class
+map("n", "<leader>nc", function()
+  local name = vim.fn.input("Class name: ")
+  if name ~= "" then
+    vim.cmd("!dotnet new class -n " .. name)
+  end
+end, { desc = "New C# class" })
+
+-- Create new interface
+map("n", "<leader>ni", function()
+  local name = vim.fn.input("Interface name: ")
+  if name ~= "" then
+    vim.cmd("!dotnet new interface -n " .. name)
+  end
+end, { desc = "New C# interface" })
 
 -- Add project to solution
 map("n", "<leader>np", function()
