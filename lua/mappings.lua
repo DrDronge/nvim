@@ -93,13 +93,94 @@ map("n", "<leader>gr", ":Gitsigns reset_hunk<CR>", { desc = "Reset git hunk" })
 map("n", "<leader>gb", ":Gitsigns blame_line<CR>", { desc = "Git blame line" })
 
 -- ========================================
+-- HELPER: Get NvimTree selected folder or fallback to cwd
+-- ========================================
+local function get_working_directory()
+  -- Check if we're currently in NvimTree
+  if vim.bo.filetype == "NvimTree" then
+    local ok, api = pcall(require, "nvim-tree.api")
+    if ok then
+      local node = api.tree.get_node_under_cursor()
+      if node then
+        -- If it's a directory, use it; if it's a file, use its parent directory
+        local dir = node.type == "directory" and node.absolute_path or vim.fn.fnamemodify(node.absolute_path, ":h")
+        return dir
+      end
+    end
+  end
+  
+  -- Try to get NvimTree's root directory if tree is open
+  local ok, api = pcall(require, "nvim-tree.api")
+  if ok then
+    local tree = api.tree.get_nodes()
+    if tree and tree.absolute_path then
+      return tree.absolute_path
+    end
+  end
+  
+  -- Fallback to Neovim's current working directory
+  return vim.fn.getcwd()
+end
+
+-- ========================================
 -- HELPER: Run command in terminal split
 -- ========================================
+
+local terminal_win = nil
+
 local function run_in_terminal(cmd)
-  -- Open terminal at bottom with specific height (15 lines)
-  vim.cmd("botright 10split | terminal " .. cmd)
-  -- Auto-start in insert mode
-  vim.cmd("startinsert")
+  -- Get the directory to run the command in
+  local dir = get_working_directory()
+  
+  -- Prepend cd command if we need to change directory
+  local full_cmd = dir and ("cd " .. vim.fn.fnameescape(dir) .. " && " .. cmd) or cmd
+  
+  -- Check if we have a valid terminal window
+  if terminal_win and vim.api.nvim_win_is_valid(terminal_win) then
+    local buf = vim.api.nvim_win_get_buf(terminal_win)
+    
+    -- Check if the buffer is still a valid terminal
+    local ok, chan = pcall(vim.api.nvim_buf_get_var, buf, "terminal_job_id")
+    
+    -- Simple check: if we can get the job id and buffer is valid, terminal is alive
+    if ok and chan and vim.api.nvim_buf_is_valid(buf) then
+      -- Try to send command
+      local send_ok = pcall(vim.api.nvim_chan_send, chan, "\x03") -- Send Ctrl+C
+      
+      if send_ok then
+        -- Terminal is still running, send the command
+        vim.api.nvim_set_current_win(terminal_win)
+        vim.defer_fn(function()
+          pcall(vim.api.nvim_chan_send, chan, full_cmd .. "\r") -- Send command + Enter
+        end, 100)
+        vim.cmd("startinsert")
+      else
+        -- Terminal job closed, create new terminal in same window
+        vim.api.nvim_set_current_win(terminal_win)
+        vim.cmd("terminal " .. full_cmd)
+        vim.cmd("startinsert")
+      end
+    else
+      -- Terminal job closed, but window still open - create new terminal in same window
+      vim.api.nvim_set_current_win(terminal_win)
+      vim.cmd("terminal " .. full_cmd)
+      vim.cmd("startinsert")
+    end
+  else
+    -- No terminal window exists, create a new one
+    vim.cmd("botright 10split | terminal " .. full_cmd)
+    terminal_win = vim.api.nvim_get_current_win()
+    vim.cmd("startinsert")
+    
+    -- Clear terminal_win when the window is closed
+    vim.api.nvim_create_autocmd("WinClosed", {
+      pattern = tostring(terminal_win),
+      callback = function()
+        terminal_win = nil
+      end,
+      once = true,
+    })
+  end
 end
 
 -- ========================================
