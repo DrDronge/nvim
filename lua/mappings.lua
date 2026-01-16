@@ -168,12 +168,64 @@ map("n", "<leader>de", function()
 end, { desc = "Evaluate expression" })
 
 -- ========================================
+-- .NET PROJECT MANAGEMENT
+-- ========================================
+
+-- Create new console app
+map("n", "<leader>nc", function()
+  local name = vim.fn.input("Project name: ")
+  if name ~= "" then
+    vim.cmd("!dotnet new console -n " .. name)
+  end
+end, { desc = "New console project" })
+
+-- Create new class library
+map("n", "<leader>nl", function()
+  local name = vim.fn.input("Library name: ")
+  if name ~= "" then
+    vim.cmd("!dotnet new classlib -n " .. name)
+  end
+end, { desc = "New class library" })
+
+-- Create new web API
+map("n", "<leader>na", function()
+  local name = vim.fn.input("API name: ")
+  if name ~= "" then
+    vim.cmd("!dotnet new webapi -n " .. name)
+  end
+end, { desc = "New Web API project" })
+
+-- Add project to solution
+map("n", "<leader>np", function()
+  local project = vim.fn.input("Project path (.csproj): ")
+  if project ~= "" then
+    vim.cmd("!dotnet sln add " .. project)
+  end
+end, { desc = "Add project to solution" })
+
+-- Create new solution
+map("n", "<leader>ns", function()
+  local name = vim.fn.input("Solution name: ")
+  if name ~= "" then
+    vim.cmd("!dotnet new sln -n " .. name)
+  end
+end, { desc = "New solution" })
+
+-- Add NuGet package
+map("n", "<leader>ng", function()
+  local package = vim.fn.input("Package name: ")
+  if package ~= "" then
+    vim.cmd("!dotnet add package " .. package)
+  end
+end, { desc = "Add NuGet package" })
+
+-- ========================================
 -- TERMINAL SHORTCUTS
 -- ========================================
 
 -- Open terminal in split
-map("n", "<leader>th", ":split | terminal<CR>", { desc = "Terminal horizontal split" })
-map("n", "<leader>tv", ":vsplit | terminal<CR>", { desc = "Terminal vertical split" })
+map("n", "<leader>th", ":botright split | terminal<CR>", { desc = "Terminal horizontal split" })
+map("n", "<leader>tv", ":botright vsplit | terminal<CR>", { desc = "Terminal vertical split" })
 
 -- Exit terminal mode with Esc
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
