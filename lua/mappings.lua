@@ -9,6 +9,7 @@ function M.setup()
   -- GENERAL
   map("n", "<C-n>", ":NvimTreeToggle<CR>", { desc = "Toggle file tree" })
   map("n", "<leader>e", ":NvimTreeFocus<CR>", { desc = "Focus file tree" })
+  map("n", "<leader>b", "<C-w>p", { desc = "Back to last window" })
 
   -- TELESCOPE
   map("n", "<leader>ff", ":Telescope find_files<CR>", { desc = "Find files" })
