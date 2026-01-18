@@ -1,4 +1,72 @@
+local tree_keymaps = require("mappings").nvim_tree_on_attach
+
 return {
+    {
+    "nvim-tree/nvim-tree.lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("nvim-tree").setup({
+        on_attach = tree_keymaps,
+
+        sync_root_with_cwd = true,
+        respect_buf_cwd = true,
+
+        update_focused_file = {
+          enable = true,
+          update_root = true,
+        },
+
+        filesystem_watchers = {
+          enable = true,
+          debounce_delay = 100,
+          ignore_dirs = {
+            "node_modules",
+            ".git",
+            "bin",
+            "obj",
+            ".vs",
+            ".vscode",
+            ".idea",
+          },
+        },
+
+        git = {
+          enable = true,
+          ignore = false,
+          timeout = 400,
+        },
+
+        view = {
+          width = 30,
+          float = {
+            enable = false,
+          },
+        },
+
+        renderer = {
+          group_empty = true,
+          root_folder_label = function(path)
+            return " " .. vim.fn.fnamemodify(path, ":~")
+          end,
+        },
+
+        filters = {
+          dotfiles = false,
+          custom = { "^.git$", "^node_modules$", "^bin$", "^obj$" },
+        },
+
+        actions = {
+          open_file = {
+            resize_window = false,
+          },
+          change_dir = {
+            enable = true,
+            global = true,
+          },
+        },
+      })
+    end,
+  },
   {
     "nvim-telescope/telescope.nvim",
     cmd = "Telescope",
@@ -77,7 +145,7 @@ return {
     "saghen/blink.cmp",
     dependencies = { "rafamadriz/friendly-snippets" },
     version = "*",
-    build = vim.fn.has("win32") == 1 and "pwsh -c .\\build.ps1" or "cargo build --release",
+    build = vim.fn.has("win32") == 1 and "pwsh -c .\\build.ps1",
     opts = {
       keymap = { preset = "default" },
       appearance = {
@@ -117,12 +185,6 @@ return {
   { "folke/todo-comments.nvim", event = { "BufReadPost", "BufNewFile" }, opts = {} },
   { "akinsho/git-conflict.nvim", event = "VeryLazy", opts = {} },
   { "sethen/line-number-change-mode.nvim" },
-  
-  {
-    "nvim-tree/nvim-tree.lua",
-    cmd = { "NvimTreeToggle", "NvimTreeFocus" },
-  },
-  
   { "nvim-tree/nvim-web-devicons", lazy = true },
   { "olimorris/onedarkpro.nvim", priority = 1000 },
   

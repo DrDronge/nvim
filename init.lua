@@ -67,9 +67,7 @@ vim.cmd([[
 -- Plugin setup with performance optimization
 require("lazy").setup("plugins", {
   performance = {
-    cache = {
-      enabled = true,
-    },
+    cache = { enabled = true },
     rtp = {
       disabled_plugins = {
         "gzip",
@@ -82,70 +80,10 @@ require("lazy").setup("plugins", {
   },
 })
 
-require("nvim-tree").setup({
-  sync_root_with_cwd = true,
-  respect_buf_cwd = true,
-  update_focused_file = {
-    enable = true,
-    update_root = true,
-  },
-  filesystem_watchers = {
-    enable = true,
-    debounce_delay = 100,
-    ignore_dirs = {
-      "node_modules",
-      ".git",
-      "bin",
-      "obj",
-      ".vs",
-      ".vscode",
-      ".idea",
-    },
-  },
-  git = {
-    enable = true,
-    ignore = false,
-    timeout = 400,
-  },
-  view = {
-    width = 30,
-    float = {
-      enable = false,
-    },
-  },
-  renderer = {
-    group_empty = true,
-    root_folder_label = function(path)
-      return " " .. vim.fn.fnamemodify(path, ":~")
-    end,
-  },
-  filters = {
-    dotfiles = false,
-    custom = { "^.git$", "^node_modules$", "^bin$", "^obj$" },
-  },
-  actions = {
-    open_file = {
-      resize_window = false,
-    },
-    change_dir = {
-      enable = true,
-      global = true,
-    },
-  },
-})
-
 require("lsp")
-require("mappings")
+require("mappings").setup()
 
 vim.cmd.colorscheme("vaporwave")
-
-require("nvim-treesitter.configs").setup({
-  highlight = {
-    enable = true,
-    additional_vim_regex_highlighting = false,
-  },
-  indent = { enable = true },
-})
 
 require("lualine").setup({
   options = {
