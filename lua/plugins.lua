@@ -184,10 +184,20 @@ return {
         event = {"BufReadPost", "BufNewFile"},
         opts = {}
     }, {
-        "akinsho/git-conflict.nvim",
-        event = "VeryLazy",
-        opts = {}
-    }, {"sethen/line-number-change-mode.nvim"}, {
+  "sindrets/diffview.nvim",
+  cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },
+  opts = {
+    enhanced_diff_hl = true,
+    view = {
+      default = {
+        layout = "diff2_horizontal",
+      },
+      merge_tool = {
+        layout = "diff3_horizontal",
+      },
+    },
+  },
+}, {"sethen/line-number-change-mode.nvim"}, {
         "nvim-tree/nvim-web-devicons",
         lazy = true
     }, {
@@ -266,7 +276,7 @@ return {
                             },
                             checkOnSave = true,
                             check = {
-                                command = "clippy",
+                                command = "clippy"
                             },
                             procMacro = {
                                 enable = true

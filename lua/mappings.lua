@@ -148,7 +148,39 @@ map("n", "<leader>lw", ":Telescope lsp_workspace_symbols<CR>", { desc = "Workspa
 -- Buffer navigation
 map("n", "<Tab>", ":bnext<CR>", { desc = "Next buffer" })
 map("n", "<S-Tab>", ":bprevious<CR>", { desc = "Previous buffer" })
-map("n", "<leader>x", ":bdelete<CR>", { desc = "Close buffer" })
+-- Close current window/pane
+map("n", "<leader>x", function()
+  local current_win = vim.api.nvim_get_current_win()
+  local current_buf = vim.api.nvim_win_get_buf(current_win)
+  local buftype = vim.api.nvim_buf_get_option(current_buf, "buftype")
+  
+  -- Count how many windows are open (excluding NvimTree)
+  local win_count = 0
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local ft = vim.api.nvim_buf_get_option(buf, "filetype")
+    if ft ~= "NvimTree" then
+      win_count = win_count + 1
+    end
+  end
+  
+  -- If it's a terminal buffer
+  if buftype == "terminal" then
+    -- Just close the buffer, keep the window if there are other terminals
+    vim.cmd("bdelete!")
+    
+    -- Reset terminal_win if this was our tracked terminal window
+    if current_win == terminal_win then
+      terminal_win = nil
+    end
+  -- If it's the last non-NvimTree window, just delete the buffer
+  elseif win_count <= 1 then
+    vim.cmd("bdelete")
+  else
+    -- Otherwise close the window
+    vim.cmd("close")
+  end
+end, { desc = "Close current window/buffer" })
 map("n", "<leader>X", ":bdelete!<CR>", { desc = "Force close buffer" })
 
 -- Window navigation
@@ -188,6 +220,12 @@ map("v", "<leader>/", "<ESC><cmd>lua require('Comment.api').toggle.linewise(vim.
 map("n", "<leader>gp", ":Gitsigns preview_hunk<CR>", { desc = "Preview git hunk" })
 map("n", "<leader>gr", ":Gitsigns reset_hunk<CR>", { desc = "Reset git hunk" })
 map("n", "<leader>gb", ":Gitsigns blame_line<CR>", { desc = "Git blame line" })
+
+-- Diffview
+map("n", "<leader>gv", ":DiffviewOpen<CR>", { desc = "Open diff view" })
+map("n", "<leader>gc", ":DiffviewClose<CR>", { desc = "Close diff view" })
+map("n", "<leader>gh", ":DiffviewFileHistory %<CR>", { desc = "Current file history" })
+map("n", "<leader>gH", ":DiffviewFileHistory<CR>", { desc = "Branch history" })
 
 -- ========================================
 -- RUST DEVELOPMENT
