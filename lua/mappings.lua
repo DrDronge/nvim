@@ -102,11 +102,32 @@ map("n", "<C-n>", ":NvimTreeToggle<CR>", { desc = "Toggle file tree" })
 map("n", "<leader>e", ":NvimTreeFocus<CR>", { desc = "Focus file tree" })
 
 -- Telescope
-map("n", "<leader>ff", ":Telescope find_files<CR>", { desc = "Find files (current dir)" })
+map("n", "<leader>ff", function()
+  require("telescope.builtin").find_files({
+    cwd = vim.fn.getcwd(),
+    hidden = false,
+    no_ignore = false,
+  })
+end, { desc = "Find files (current dir)" })
+
+map("n", "<leader>fF", function()
+  require("telescope.builtin").find_files({
+    cwd = vim.fn.getcwd(),
+    hidden = true,
+    no_ignore = true,
+  })
+end, { desc = "Find ALL files (including hidden)" })
+
 map("n", "<leader>fa", function()
   require("telescope.builtin").find_files({ cwd = vim.fn.stdpath("config") })
 end, { desc = "Find files (nvim config)" })
-map("n", "<leader>fg", ":Telescope live_grep<CR>", { desc = "Live grep" })
+
+map("n", "<leader>fg", function()
+  require("telescope.builtin").live_grep({
+    cwd = vim.fn.getcwd(),
+  })
+end, { desc = "Live grep" })
+
 map("n", "<leader>fb", ":Telescope buffers<CR>", { desc = "Find buffers" })
 map("n", "<leader>fh", ":Telescope help_tags<CR>", { desc = "Help tags" })
 map("n", "<leader>fr", ":Telescope oldfiles<CR>", { desc = "Recent files" })
@@ -580,7 +601,15 @@ function M.nvim_tree_on_attach(bufnr)
 
   -- Custom keybinding
   vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open"))
-  vim.keymap.set("n", "C", api.tree.change_root_to_node, opts("Root to node"))
+  vim.keymap.set("n", "C", function()
+    local node = api.tree.get_node_under_cursor()
+    if node then
+      local dir = node.type == "directory" and node.absolute_path or vim.fn.fnamemodify(node.absolute_path, ":h")
+      api.tree.change_root(dir)
+      vim.cmd("cd " .. vim.fn.fnameescape(dir))
+      print("📁 Changed root and cwd to: " .. vim.fn.fnamemodify(dir, ":t"))
+    end
+  end, opts("Change root and cwd"))
   vim.keymap.set("n", "U", api.tree.change_root_to_parent, opts("Root to parent"))
   vim.keymap.set("n", "r", api.tree.reload, opts("Refresh"))
   vim.keymap.set("n", "q", api.tree.close, opts("Close tree"))
