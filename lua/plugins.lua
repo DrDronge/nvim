@@ -25,7 +25,7 @@ return {
                 git = {
                     enable = true,
                     ignore = false,
-                    timeout = 400
+                    timeout = 2000
                 },
 
                 view = {
@@ -152,22 +152,28 @@ return {
         },
         opts_extend = {"sources.default"}
     }, {
-        "lewis6991/gitsigns.nvim",
-        event = {"BufReadPost", "BufNewFile"},
-        opts = {
-            signs = {
-                add = {
-                    text = "+"
-                },
-                change = {
-                    text = "~"
-                },
-                delete = {
-                    text = "_"
-                }
-            }
-        }
-    }, {
+  "lewis6991/gitsigns.nvim",
+  event = { "BufReadPre", "BufNewFile" },
+  opts = {
+    signs = {
+      add = { text = "+" },
+      change = { text = "~" },
+      delete = { text = "_" },
+      topdelete = { text = "‾" },
+      changedelete = { text = "~" },
+      untracked = { text = "┆" },
+    },
+    -- Performance settings
+    watch_gitdir = {
+      interval = 1000,
+      follow_files = true,
+    },
+    current_line_blame = false,
+    max_file_length = 10000, -- Skip large files
+    -- Increase update delay to reduce git calls
+    update_debounce = 200,
+  },
+}, {
         "nvim-lualine/lualine.nvim",
         event = "VeryLazy",
         opts = {}
@@ -184,20 +190,20 @@ return {
         event = {"BufReadPost", "BufNewFile"},
         opts = {}
     }, {
-  "sindrets/diffview.nvim",
-  cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },
-  opts = {
-    enhanced_diff_hl = true,
-    view = {
-      default = {
-        layout = "diff2_horizontal",
-      },
-      merge_tool = {
-        layout = "diff3_horizontal",
-      },
-    },
-  },
-}, {"sethen/line-number-change-mode.nvim"}, {
+        "sindrets/diffview.nvim",
+        cmd = {"DiffviewOpen", "DiffviewClose", "DiffviewFileHistory"},
+        opts = {
+            enhanced_diff_hl = true,
+            view = {
+                default = {
+                    layout = "diff2_horizontal"
+                },
+                merge_tool = {
+                    layout = "diff3_horizontal"
+                }
+            }
+        }
+    }, {"sethen/line-number-change-mode.nvim"}, {
         "nvim-tree/nvim-web-devicons",
         lazy = true
     }, {
@@ -299,5 +305,8 @@ return {
                 }
             })
         end
+    }, {
+        "b0o/schemastore.nvim",
+        lazy = true
     }
 }
