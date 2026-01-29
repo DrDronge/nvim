@@ -19,8 +19,11 @@ vim.opt.relativenumber = false
 vim.opt.numberwidth = 4
 
 -- Performance improvements
-vim.opt.updatetime = 250
-vim.opt.timeoutlen = 300
+local UPDATE_TIME_MS = 250
+local TIMEOUT_LEN_MS = 300
+
+vim.opt.updatetime = UPDATE_TIME_MS
+vim.opt.timeoutlen = TIMEOUT_LEN_MS
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.writebackup = false
@@ -40,9 +43,12 @@ end
 
 -- Fix for Windows terminal focus issues
 if vim.fn.has("win32") == 1 then
+  local TTIMEOUT_MS = 10
+  local REDRAW_TIME_MS = 1500
+  
   vim.opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50"
-  vim.opt.ttimeoutlen = 10
-  vim.opt.redrawtime = 1500
+  vim.opt.ttimeoutlen = TTIMEOUT_MS
+  vim.opt.redrawtime = REDRAW_TIME_MS
 
   -- Auto-redraw on focus gain (fixes tab-out freeze)
   vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {

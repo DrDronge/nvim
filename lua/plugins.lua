@@ -1,5 +1,14 @@
 local tree_keymaps = require("mappings").nvim_tree_on_attach
 
+-- Constants
+local TREE_WIDTH = 30
+local WATCHER_DEBOUNCE_MS = 100
+local GIT_TIMEOUT_MS = 2000
+local MAX_FILE_LENGTH = 10000
+local GITSIGNS_DEBOUNCE_MS = 200
+local GITSIGNS_WATCH_INTERVAL_MS = 1000
+local DOC_DELAY_MS = 500
+
 return {
     {
         "nvim-tree/nvim-tree.lua",
@@ -18,18 +27,18 @@ return {
 
                 filesystem_watchers = {
                     enable = true,
-                    debounce_delay = 100,
+                    debounce_delay = WATCHER_DEBOUNCE_MS,
                     ignore_dirs = {"node_modules", ".git", "bin", "obj", ".vs", ".vscode", ".idea"}
                 },
 
                 git = {
                     enable = true,
                     ignore = false,
-                    timeout = 2000
+                    timeout = GIT_TIMEOUT_MS
                 },
 
                 view = {
-                    width = 30,
+                    width = TREE_WIDTH,
                     float = {
                         enable = false
                     }
@@ -140,7 +149,7 @@ return {
             completion = {
                 documentation = {
                     auto_show = true,
-                    auto_show_delay_ms = 500
+                    auto_show_delay_ms = DOC_DELAY_MS
                 }
             },
             sources = {
@@ -163,15 +172,13 @@ return {
       changedelete = { text = "~" },
       untracked = { text = "┆" },
     },
-    -- Performance settings
     watch_gitdir = {
-      interval = 1000,
+      interval = GITSIGNS_WATCH_INTERVAL_MS,
       follow_files = true,
     },
     current_line_blame = false,
-    max_file_length = 10000, -- Skip large files
-    -- Increase update delay to reduce git calls
-    update_debounce = 200,
+    max_file_length = MAX_FILE_LENGTH,
+    update_debounce = GITSIGNS_DEBOUNCE_MS,
   },
 }, {
         "nvim-lualine/lualine.nvim",

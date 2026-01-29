@@ -1,96 +1,8 @@
 local M = {}
 
 local map = vim.keymap.set
-
--- ========================================
--- HELPER: Get NvimTree selected folder or fallback to cwd
--- ========================================
-local function get_working_directory()
-  -- Check if we're currently in NvimTree
-  if vim.bo.filetype == "NvimTree" then
-    local ok, api = pcall(require, "nvim-tree.api")
-    if ok then
-      local node = api.tree.get_node_under_cursor()
-      if node then
-        -- If it's a directory, use it; if it's a file, use its parent directory
-        local dir = node.type == "directory" and node.absolute_path or vim.fn.fnamemodify(node.absolute_path, ":h")
-        return dir
-      end
-    end
-  end
-  
-  -- Try to get NvimTree's root directory if tree is open
-  local ok, api = pcall(require, "nvim-tree.api")
-  if ok then
-    local tree = api.tree.get_nodes()
-    if tree and tree.absolute_path then
-      return tree.absolute_path
-    end
-  end
-  
-  -- Fallback to Neovim's current working directory
-  return vim.fn.getcwd()
-end
-
--- ========================================
--- HELPER: Run command in terminal split
--- ========================================
-local terminal_win = nil
-
-local function run_in_terminal(cmd)
-  -- Get the directory to run the command in
-  local dir = get_working_directory()
-  
-  -- Prepend cd command if we need to change directory
-  local full_cmd = dir and ("cd " .. vim.fn.fnameescape(dir) .. " && " .. cmd) or cmd
-  
-  -- Check if we have a valid terminal window
-  if terminal_win and vim.api.nvim_win_is_valid(terminal_win) then
-    local buf = vim.api.nvim_win_get_buf(terminal_win)
-    
-    -- Check if the buffer is still a valid terminal
-    local ok, chan = pcall(vim.api.nvim_buf_get_var, buf, "terminal_job_id")
-    
-    -- Simple check: if we can get the job id and buffer is valid, terminal is alive
-    if ok and chan and vim.api.nvim_buf_is_valid(buf) then
-      -- Try to send command
-      local send_ok = pcall(vim.api.nvim_chan_send, chan, "\x03") -- Send Ctrl+C
-      
-      if send_ok then
-        -- Terminal is still running, send the command
-        vim.api.nvim_set_current_win(terminal_win)
-        vim.defer_fn(function()
-          pcall(vim.api.nvim_chan_send, chan, full_cmd .. "\r") -- Send command + Enter
-        end, 100)
-        vim.cmd("startinsert")
-      else
-        -- Terminal job closed, create new terminal in same window
-        vim.api.nvim_set_current_win(terminal_win)
-        vim.cmd("terminal " .. full_cmd)
-        vim.cmd("startinsert")
-      end
-    else
-      -- Terminal job closed, but window still open - create new terminal in same window
-      vim.api.nvim_set_current_win(terminal_win)
-      vim.cmd("terminal " .. full_cmd)
-      vim.cmd("startinsert")
-    end
-  else
-    -- No terminal window exists, create a new one
-    vim.cmd("botright 10split | terminal " .. full_cmd)
-    terminal_win = vim.api.nvim_get_current_win()
-    vim.cmd("startinsert")
-    
-    -- Clear terminal_win when the window is closed
-    vim.api.nvim_create_autocmd("WinClosed", {
-      pattern = tostring(terminal_win),
-      callback = function()
-        terminal_win = nil
-      end,
-      once = true,
-    })
-  end
-end
+local terminal = require("terminal")
+local build = require("build")
 
 -- =====================================================
 -- GLOBAL KEYMAPS
@@ -169,39 +81,40 @@ map("n", "<leader>lw", ":Telescope lsp_workspace_symbols<CR>", { desc = "Workspa
 -- Buffer navigation
 map("n", "<Tab>", ":bnext<CR>", { desc = "Next buffer" })
 map("n", "<S-Tab>", ":bprevious<CR>", { desc = "Previous buffer" })
+
 -- Close current window/pane
 map("n", "<leader>x", function()
   local current_win = vim.api.nvim_get_current_win()
   local current_buf = vim.api.nvim_win_get_buf(current_win)
-  local buftype = vim.api.nvim_buf_get_option(current_buf, "buftype")
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = current_buf })
   
-  -- Count how many windows are open (excluding NvimTree)
-  local win_count = 0
+  -- Handle terminal buffers
+  if buftype == "terminal" then
+    vim.cmd("bdelete!")
+    if current_win == terminal.get_terminal_win() then
+      terminal.clear_terminal_win()
+    end
+    return
+  end
+  
+  -- Count non-NvimTree windows
+  local non_tree_win_count = 0
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     local buf = vim.api.nvim_win_get_buf(win)
-    local ft = vim.api.nvim_buf_get_option(buf, "filetype")
+    local ft = vim.api.nvim_get_option_value("filetype", { buf = buf })
     if ft ~= "NvimTree" then
-      win_count = win_count + 1
+      non_tree_win_count = non_tree_win_count + 1
     end
   end
   
-  -- If it's a terminal buffer
-  if buftype == "terminal" then
-    -- Just close the buffer, keep the window if there are other terminals
-    vim.cmd("bdelete!")
-    
-    -- Reset terminal_win if this was our tracked terminal window
-    if current_win == terminal_win then
-      terminal_win = nil
-    end
-  -- If it's the last non-NvimTree window, just delete the buffer
-  elseif win_count <= 1 then
+  -- Last window: delete buffer, otherwise close window
+  if non_tree_win_count <= 1 then
     vim.cmd("bdelete")
   else
-    -- Otherwise close the window
     vim.cmd("close")
   end
 end, { desc = "Close current window/buffer" })
+
 map("n", "<leader>X", ":bdelete!<CR>", { desc = "Force close buffer" })
 
 -- Window navigation
@@ -252,74 +165,18 @@ map("n", "<leader>gH", ":DiffviewFileHistory<CR>", { desc = "Branch history" })
 -- RUST DEVELOPMENT
 -- ========================================
 
--- Run Rust project
-map("n", "<F7>", function()
-  vim.cmd("w")
-  run_in_terminal("cargo run")
-end, { desc = "Run Rust project" })
-
--- Build Rust project
-map("n", "<F8>", function()
-  vim.cmd("w")
-  run_in_terminal("cargo build")
-end, { desc = "Build Rust project" })
-
--- Test Rust project
-map("n", "<leader>rt", function()
-  run_in_terminal("cargo test")
-end, { desc = "Run Rust tests" })
-
--- Check Rust project (faster than build)
-map("n", "<leader>rc", function()
-  run_in_terminal("cargo check")
-end, { desc = "Check Rust project" })
-
--- Run Clippy (linter)
-map("n", "<leader>rl", function()
-  run_in_terminal("cargo clippy")
-end, { desc = "Run Clippy" })
-
--- Format Rust code
-map("n", "<leader>rf", function()
-  vim.cmd("!rustfmt %")
-  vim.cmd("e") -- Reload file
-end, { desc = "Format Rust file" })
-
--- Build release
-map("n", "<leader>rb", function()
-  run_in_terminal("cargo build --release")
-end, { desc = "Build Rust release" })
-
--- Run release
-map("n", "<leader>rr", function()
-  run_in_terminal("cargo run --release")
-end, { desc = "Run Rust release" })
-
--- Cargo clean
-map("n", "<leader>rx", function()
-  run_in_terminal("cargo clean")
-end, { desc = "Cargo clean" })
-
--- Create new Rust project
-map("n", "<leader>rnb", function()
-  local name = vim.fn.input("Binary project name: ")
-  if name ~= "" then
-    run_in_terminal("cargo new " .. name)
-  end
-end, { desc = "New Rust binary project" })
-
--- Create new Rust library
-map("n", "<leader>rnl", function()
-  local name = vim.fn.input("Library name: ")
-  if name ~= "" then
-    run_in_terminal("cargo new --lib " .. name)
-  end
-end, { desc = "New Rust library" })
-
--- Add dependency (opens Cargo.toml)
-map("n", "<leader>ra", function()
-  vim.cmd("e Cargo.toml")
-end, { desc = "Open Cargo.toml" })
+map("n", "<F7>", build.cargo_run, { desc = "Run Rust project" })
+map("n", "<F8>", build.cargo_build, { desc = "Build Rust project" })
+map("n", "<leader>rt", build.cargo_test, { desc = "Run Rust tests" })
+map("n", "<leader>rc", build.cargo_check, { desc = "Check Rust project" })
+map("n", "<leader>rl", build.cargo_clippy, { desc = "Run Clippy" })
+map("n", "<leader>rf", build.cargo_format_file, { desc = "Format Rust file" })
+map("n", "<leader>rb", build.cargo_build_release, { desc = "Build Rust release" })
+map("n", "<leader>rr", build.cargo_run_release, { desc = "Run Rust release" })
+map("n", "<leader>rx", build.cargo_clean, { desc = "Cargo clean" })
+map("n", "<leader>rnb", build.cargo_new_bin, { desc = "New Rust binary project" })
+map("n", "<leader>rnl", build.cargo_new_lib, { desc = "New Rust library" })
+map("n", "<leader>ra", build.open_cargo_toml, { desc = "Open Cargo.toml" })
 
 -- Rust-specific LSP keybindings (when rust-analyzer is attached)
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -370,33 +227,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- BUILD & RUN (C# / .NET)
 -- ========================================
 
--- Build current project
-map("n", "<F5>", function()
-  vim.cmd("w")
-  run_in_terminal("dotnet build")
-end, { desc = "Build .NET project" })
-
--- Run current project
-map("n", "<F6>", function()
-  vim.cmd("w")
-  run_in_terminal("dotnet run")
-end, { desc = "Run .NET project" })
-
--- Build and run
-map("n", "<leader>br", function()
-  vim.cmd("w")
-  run_in_terminal("dotnet build && dotnet run")
-end, { desc = "Build and run" })
-
--- Run tests
-map("n", "<leader>bt", function()
-  run_in_terminal("dotnet test")
-end, { desc = "Run .NET tests" })
-
--- Clean build
-map("n", "<leader>bc", function()
-  run_in_terminal("dotnet clean && dotnet build")
-end, { desc = "Clean and build" })
+map("n", "<F5>", build.dotnet_build, { desc = "Build .NET project" })
+map("n", "<F6>", build.dotnet_run, { desc = "Run .NET project" })
+map("n", "<leader>br", build.dotnet_build_and_run, { desc = "Build and run" })
+map("n", "<leader>bt", build.dotnet_test, { desc = "Run .NET tests" })
+map("n", "<leader>bc", build.dotnet_clean_build, { desc = "Clean and build" })
 
 -- ========================================
 -- DEBUGGING (using nvim-dap)
@@ -446,69 +281,14 @@ end, { desc = "Evaluate expression" })
 -- .NET PROJECT MANAGEMENT
 -- ========================================
 
--- Create new console app
-map("n", "<leader>nco", function()
-  local name = vim.fn.input("Console project name: ")
-  if name ~= "" then
-    run_in_terminal("dotnet new console -n " .. name)
-  end
-end, { desc = "New console project" })
-
--- Create new class library
-map("n", "<leader>nl", function()
-  local name = vim.fn.input("Library name: ")
-  if name ~= "" then
-    run_in_terminal("dotnet new classlib -n " .. name)
-  end
-end, { desc = "New class library" })
-
--- Create new web API
-map("n", "<leader>na", function()
-  local name = vim.fn.input("API name: ")
-  if name ~= "" then
-    run_in_terminal("dotnet new webapi -n " .. name)
-  end
-end, { desc = "New Web API project" })
-
--- Create new C# class
-map("n", "<leader>nc", function()
-  local name = vim.fn.input("Class name: ")
-  if name ~= "" then
-    run_in_terminal("dotnet new class -n " .. name)
-  end
-end, { desc = "New C# class" })
-
--- Create new interface
-map("n", "<leader>ni", function()
-  local name = vim.fn.input("Interface name: ")
-  if name ~= "" then
-    run_in_terminal("dotnet new interface -n " .. name)
-  end
-end, { desc = "New C# interface" })
-
--- Add project to solution
-map("n", "<leader>np", function()
-  local project = vim.fn.input("Project path (.csproj): ")
-  if project ~= "" then
-    run_in_terminal("dotnet sln add " .. project)
-  end
-end, { desc = "Add project to solution" })
-
--- Create new solution
-map("n", "<leader>ns", function()
-  local name = vim.fn.input("Solution name: ")
-  if name ~= "" then
-    run_in_terminal("dotnet new sln -n " .. name)
-  end
-end, { desc = "New solution" })
-
--- Add NuGet package
-map("n", "<leader>ng", function()
-  local package = vim.fn.input("Package name: ")
-  if package ~= "" then
-    run_in_terminal("dotnet add package " .. package)
-  end
-end, { desc = "Add NuGet package" })
+map("n", "<leader>nco", build.new_console, { desc = "New console project" })
+map("n", "<leader>nl", build.new_classlib, { desc = "New class library" })
+map("n", "<leader>na", build.new_webapi, { desc = "New Web API project" })
+map("n", "<leader>nc", build.new_class, { desc = "New C# class" })
+map("n", "<leader>ni", build.new_interface, { desc = "New C# interface" })
+map("n", "<leader>np", build.add_project_to_sln, { desc = "Add project to solution" })
+map("n", "<leader>ns", build.new_solution, { desc = "New solution" })
+map("n", "<leader>ng", build.add_package, { desc = "Add NuGet package" })
 
 -- ========================================
 -- DIRECTORY NAVIGATION
@@ -553,9 +333,11 @@ end, { desc = "Reload Neovim config" })
 -- TERMINAL SHORTCUTS
 -- ========================================
 
--- Open terminal in split
-map("n", "<leader>th", ":botright 10split | terminal<CR>i", { desc = "Terminal horizontal split" })
-map("n", "<leader>tv", ":botright 80vsplit | terminal<CR>i", { desc = "Terminal vertical split" })
+local TERMINAL_HEIGHT = 10
+local TERMINAL_WIDTH = 80
+
+map("n", "<leader>th", string.format(":botright %dsplit | terminal<CR>i", TERMINAL_HEIGHT), { desc = "Terminal horizontal split" })
+map("n", "<leader>tv", string.format(":botright %dvsplit | terminal<CR>i", TERMINAL_WIDTH), { desc = "Terminal vertical split" })
 
 -- Exit terminal mode with Esc
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
@@ -565,8 +347,8 @@ map("n", "<leader>w", function()
   local current_win = vim.api.nvim_get_current_win()
   vim.cmd("close")
   
-  if current_win == terminal_win then
-    terminal_win = nil
+  if current_win == terminal.get_terminal_win() then
+    terminal.clear_terminal_win()
   end
 end, { desc = "Close current window" })
 
@@ -580,9 +362,13 @@ map("t", "<C-Left>", "<C-\\><C-n>:vertical resize -2<CR>i", { desc = "Decrease t
 map("t", "<C-Right>", "<C-\\><C-n>:vertical resize +2<CR>i", { desc = "Increase terminal width" })
 
 -- Quick resize terminal to specific sizes (from terminal mode)
-map("t", "<A-=>", "<C-\\><C-n>:resize 20<CR>i", { desc = "Terminal: medium height" })
-map("t", "<A-+>", "<C-\\><C-n>:resize 30<CR>i", { desc = "Terminal: large height" })
-map("t", "<A-->", "<C-\\><C-n>:resize 10<CR>i", { desc = "Terminal: small height" })
+local TERMINAL_SMALL = 10
+local TERMINAL_MEDIUM = 20
+local TERMINAL_LARGE = 30
+
+map("t", "<A-=>", string.format("<C-\\><C-n>:resize %d<CR>i", TERMINAL_MEDIUM), { desc = "Terminal: medium height" })
+map("t", "<A-+>", string.format("<C-\\><C-n>:resize %d<CR>i", TERMINAL_LARGE), { desc = "Terminal: large height" })
+map("t", "<A-->", string.format("<C-\\><C-n>:resize %d<CR>i", TERMINAL_SMALL), { desc = "Terminal: small height" })
 
 end
 
