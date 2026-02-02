@@ -55,13 +55,7 @@ lsp_helper.setup_filetype_lsp({
   },
 })
 
--- Rust auto-cd (LSP managed by rustaceanvim plugin)
-lsp_helper.setup_filetype_cd({
-  filetypes = "rust",
-  root_patterns = { "Cargo.toml", ".git" },
-  icon = "🦀",
-  display_name = "Rust",
-})
+-- Rust LSP is handled by rustaceanvim plugin (no auto-cd needed)
 
 -- Show LSP progress
 vim.api.nvim_create_autocmd("LspProgress", {
