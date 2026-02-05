@@ -3,7 +3,7 @@ local tree_keymaps = require("mappings").nvim_tree_on_attach
 -- Constants
 local TREE_WIDTH = 30
 local WATCHER_DEBOUNCE_MS = 100
-local GIT_TIMEOUT_MS = 2000
+local GIT_TIMEOUT_MS = 8000
 local MAX_FILE_LENGTH = 10000
 local GITSIGNS_DEBOUNCE_MS = 200
 local GITSIGNS_WATCH_INTERVAL_MS = 1000

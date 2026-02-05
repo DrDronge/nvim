@@ -14,25 +14,30 @@ require("mason-lspconfig").setup({
 
 local lsp_helper = require("lsp_helper")
 
--- C# LSP Configuration
-lsp_helper.setup_filetype_lsp({
-  name = "omnisharp",
-  filetypes = "cs",
-  root_patterns = { "%.sln$", "*.csproj", ".git" },
-  icon = "📁",
-  display_name = "C#",
-  lsp_config = {
-    cmd = { "omnisharp", "--languageserver", "--hostPID", tostring(vim.fn.getpid()) },
-    settings = {
-      FormattingOptions = {
-        EnableEditorConfigSupport = true,
-        OrganizeImports = true,
-      },
-      RoslynExtensionsOptions = {
-        EnableAnalyzersSupport = true,
-        EnableImportCompletion = true,
-        AnalyzeOpenDocumentsOnly = false,
-      },
+local capabilities = require("blink.cmp").get_lsp_capabilities()
+local lspconfig = require("lspconfig")
+
+-- C# LSP (OmniSharp)
+-- Use lspconfig's omnisharp integration to avoid INVALID_SERVER_MESSAGE issues.
+lspconfig.omnisharp.setup({
+  capabilities = capabilities,
+  on_attach = lsp_helper.on_attach,
+  cmd = { "omnisharp", "--languageserver", "--hostPID", tostring(vim.fn.getpid()) },
+  root_dir = function(fname)
+    -- Prefer solution root when present (OmniSharp behaves best at .sln root)
+    return vim.fs.root(fname, function(name)
+      return name:match("%.sln$")
+    end) or vim.fs.root(fname, { "*.csproj", ".git" })
+  end,
+  settings = {
+    FormattingOptions = {
+      EnableEditorConfigSupport = true,
+      OrganizeImports = true,
+    },
+    RoslynExtensionsOptions = {
+      EnableAnalyzersSupport = true,
+      EnableImportCompletion = true,
+      AnalyzeOpenDocumentsOnly = false,
     },
   },
 })
